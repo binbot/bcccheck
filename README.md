@@ -111,7 +111,7 @@ Security note:
 Run the checker:
 
 ```sh
-python bc.py
+python bcccheck.py
 ```
 
 What it does:
@@ -204,7 +204,7 @@ Example areas for contribution:
 
 ## Project structure
 
-- `bc.py` — main script
+- `bcccheck.py` — main script
 - `codes.txt` — your list of codes (not committed)
 - `cookies.json` — your Bandcamp cookies (not committed)
 - `README.md` — this document
