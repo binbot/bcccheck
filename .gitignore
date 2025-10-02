@@ -1,0 +1,44 @@
+# .gitignore for bcccheck (Python + Playwright)
+
+# Python cache and artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+*.coverage
+.coverage
+.cache/
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+
+# Local config and environment
+.env
+*.log
+
+# Playwright artifacts
+playwright-report/
+blob-report/
+test-results/
+trace.zip
+
+# Local data (do NOT commit secrets or personal info)
+cookies.json
+codes.txt
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
