@@ -42,3 +42,8 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# PyInstaller files
+build/
+dist/
+*.spec
