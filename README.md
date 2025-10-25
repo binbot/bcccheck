@@ -64,14 +64,21 @@ bcccheck opens bandcamp.com/yum in a real browser session, enters codes from a l
 For users who want a simple download-and-run experience without installing Python or dependencies:
 
 1. Download the latest release from the [Releases](https://github.com/your-user/bcccheck/releases) page
-2. Download `bcccheck-v1.0.0-linux.zip` (or the appropriate version for your platform)
+2. Download the appropriate package for your platform:
+   - Linux: `bcccheck-v1.0.0-linux.zip`
+   - macOS (Apple Silicon): `bcccheck-v1.0.0-macos-arm64.zip`
 3. Unzip the file to a directory of your choice
 4. Place your `codes.txt` and `cookies.json` files in the unzipped directory
 5. Run the executable:
    - Linux/macOS: `./bcccheck`
-   - Windows: `bcccheck.exe`
 
 The package includes everything needed: Python runtime, Playwright, and Chromium browser.
+
+**macOS Security Note**: On first run, macOS may block the application due to security restrictions. If this happens:
+- Go to System Settings > Privacy & Security
+- Look for a message about "bcccheck" being blocked
+- Click "Allow Anyway" or "Open"
+- You may need to right-click the executable and select "Open" the first time
 
 ---
 

@@ -133,9 +133,9 @@ async def run():
         # Set browsers path for bundled version
         if hasattr(sys, '_MEIPASS'):
             pw.browsers_path = Path(sys._MEIPASS) / 'ms-playwright'
-        # Use headless=True for packaged version, False for development
-        is_packaged = hasattr(sys, '_MEIPASS')
-        browser = await pw.chromium.launch(headless=is_packaged)
+        # Use headless=False for both packaged and development versions
+        # (headless_shell binary is not included in the bundle)
+        browser = await pw.chromium.launch(headless=False)
         context = await browser.new_context()
 
         # Load cookies if available (must be valid, logged-in session)
