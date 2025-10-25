@@ -1,6 +1,7 @@
 # bc.py
 
 import asyncio
+import sys
 from pathlib import Path
 from playwright.async_api import async_playwright
 
@@ -129,8 +130,12 @@ async def run():
         return
 
     async with async_playwright() as pw:
-        # Use headless=False while stabilizing; switch to True later if desired
-        browser = await pw.chromium.launch(headless=False)
+        # Set browsers path for bundled version
+        if hasattr(sys, '_MEIPASS'):
+            pw.browsers_path = Path(sys._MEIPASS) / 'ms-playwright'
+        # Use headless=True for packaged version, False for development
+        is_packaged = hasattr(sys, '_MEIPASS')
+        browser = await pw.chromium.launch(headless=is_packaged)
         context = await browser.new_context()
 
         # Load cookies if available (must be valid, logged-in session)

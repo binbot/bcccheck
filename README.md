@@ -29,33 +29,49 @@ bcccheck opens bandcamp.com/yum in a real browser session, enters codes from a l
 
 ---
 
-## Installation
+## Installation (Development)
 
 1. Clone the repo
-   ```sh
-   git clone https://github.com/your-user/bcccheck.git
-   cd bcccheck
-   ```
+    ```sh
+    git clone https://github.com/your-user/bcccheck.git
+    cd bcccheck
+    ```
 
 2. Create and activate a virtual environment (recommended)
-   ```sh
-   python -m venv .venv
-   source .venv/bin/activate   # macOS/Linux
-   # .venv\Scripts\Activate    # Windows (PowerShell)
-   ```
+    ```sh
+    python -m venv .venv
+    source .venv/bin/activate   # macOS/Linux
+    # .venv\Scripts\Activate    # Windows (PowerShell)
+    ```
 
 3. Install dependencies
-   ```sh
-   pip install playwright
-   ```
+    ```sh
+    pip install playwright
+    ```
 
 4. Install Playwright browsers
-   ```sh
-   playwright install
-   # Optional: if you want Firefox/WebKit too:
-   playwright install firefox
-   playwright install webkit
-   ```
+    ```sh
+    playwright install
+    # Optional: if you want Firefox/WebKit too:
+    playwright install firefox
+    playwright install webkit
+    ```
+
+---
+
+## Standalone Package (Easy Installation)
+
+For users who want a simple download-and-run experience without installing Python or dependencies:
+
+1. Download the latest release from the [Releases](https://github.com/your-user/bcccheck/releases) page
+2. Download `bcccheck-v1.0.0-linux.zip` (or the appropriate version for your platform)
+3. Unzip the file to a directory of your choice
+4. Place your `codes.txt` and `cookies.json` files in the unzipped directory
+5. Run the executable:
+   - Linux/macOS: `./bcccheck`
+   - Windows: `bcccheck.exe`
+
+The package includes everything needed: Python runtime, Playwright, and Chromium browser.
 
 ---
 
@@ -108,10 +124,19 @@ Security note:
 
 ## Usage
 
+### Development Version
 Run the checker:
 
 ```sh
 python bcccheck.py
+```
+
+### Standalone Package
+After unzipping, run:
+
+```sh
+./bcccheck  # Linux/macOS
+bcccheck.exe  # Windows
 ```
 
 What it does:
@@ -171,6 +196,16 @@ If neither appears, it checks the page for common error messages (e.g., “inval
 - Please use responsibly and in accordance with Bandcamp’s terms of use and local laws.
 
 ---
+
+## Building the Standalone Package
+
+To build the standalone executable for distribution:
+
+1. Install PyInstaller: `pip install pyinstaller`
+2. Install dependencies: `pip install -r requirements.txt`
+3. Install browsers: `playwright install chromium`
+4. Build: `pyinstaller bcccheck.spec`
+5. The distributable zip will be in `dist/bcccheck-v1.0.0-linux.zip`
 
 ## Open Source
 
