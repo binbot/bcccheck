@@ -1,0 +1,92 @@
+/* styles.tcss */
+
+/* Catppuccin Mocha Palette */
+$background: #1e1e2e;
+$surface: #313244;
+$primary: #cba6f7;   /* Mauve */
+$secondary: #89b4fa; /* Blue */
+$accent: #a6e3a1;    /* Green */
+$error: #f38ba8;     /* Red */
+$text: #cdd6f4;
+
+Screen {
+    background: $background;
+    color: $text;
+}
+
+Header {
+    background: $primary;
+    color: $background;
+    text-style: bold;
+    height: 1;
+}
+
+Footer {
+    background: $surface;
+    color: $secondary;
+}
+
+#main-container {
+    layout: grid;
+    grid-size: 2;
+    grid-columns: 1fr 2fr;
+    grid-gutter: 1;
+    padding: 1;
+}
+
+.pane {
+    background: $surface;
+    border: round $secondary;
+    padding: 1;
+    height: 100%;
+    transition: border 200ms, offset 200ms;
+}
+
+.pane:focus {
+    border: double $primary;
+    offset-y: -1;
+}
+
+#code-list-pane {
+    /* Left sidebar */
+}
+
+#status-pane {
+    /* Main area */
+}
+
+DataTable {
+    background: $surface;
+    color: $text;
+    height: 100%;
+    border: none;
+}
+
+DataTable > .datatable--header {
+    background: $secondary;
+    color: $background;
+    text-style: bold;
+}
+
+DataTable > .datatable--cursor {
+    background: $primary 30%;
+}
+
+Log {
+    background: $surface;
+    color: $text;
+    border: none;
+    height: 1fr;
+}
+
+#progress-area {
+    height: 3;
+    content-align: center middle;
+    border-bottom: dashed $secondary;
+    margin-bottom: 1;
+}
+
+.status-checking { color: $secondary; }
+.status-success { color: $accent; text-style: bold; }
+.status-failed { color: $text 50%; }
+.status-error { color: $error; }
