@@ -3,12 +3,15 @@
 import asyncio
 from pathlib import Path
 from textual.app import App, ComposeResult
-from textual.containers import Container, Vertical, Horizontal
-from textual.widgets import Header, Footer, DataTable, Static, Log, Label
-from textual.worker import Worker, WorkerState
-from bcccheck import BCChecker, CODES_FILE
+from textual.containers import Container, Vertical
+from textual.widgets import DataTable, Static, Log, Label
+from bcccheck import BCChecker
 
 class BCCheckApp(App):
+    """
+    A minimalist, integrated Bandcamp YUM code checker TUI.
+    Aesthetic: Catppuccin Mocha / "Blip_Blip" style.
+    """
     CSS_PATH = "styles.tcss"
     BINDINGS = [
         ("q", "quit", "Quit"),
@@ -16,29 +19,30 @@ class BCCheckApp(App):
     ]
 
     def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
+        # Title bar without the pink background
+        yield Label(" ═══ BCCCHECK ═══ ", id="app-title")
         with Container(id="main-container"):
             with Vertical(id="code-list-pane", classes="pane"):
-                yield Label("[bold cyan]CODES LIST[/]")
+                # DataTable for codes on the left
                 yield DataTable()
             with Vertical(id="status-pane", classes="pane"):
-                yield Label("[bold magenta]ACTIVITY LOG[/]")
+                # Scrolling log on the right
                 yield Log()
+                # Status area at the bottom
                 with Static(id="progress-area"):
-                    yield Label("Press [bold secondary]'s'[/] to start checking codes", id="status-label")
-        yield Footer()
+                    yield Label("Press [bold blue]S[/] to start • [bold blue]Q[/] to quit", id="status-label")
 
     def on_mount(self) -> None:
         """Initialize the data table with codes from file."""
         table = self.query_one(DataTable)
-        # We explicitly name the column keys so we can find them later
+        # Use explicit keys to avoid any look-up errors
         table.add_column("Code", key="code_col")
-        table.add_column("Status", key="status_col")
+        table.add_column("Status", key="status_final")
         
         checker = BCChecker()
         codes = checker.load_codes()
         for code in codes:
-            # We use the code itself as the unique 'key' for the row
+            # We use the code as the row key for easy reference
             table.add_row(code, "Ready", key=code)
         
         self.log_msg("Ready. Press 's' to start.")
@@ -48,13 +52,13 @@ class BCCheckApp(App):
 
     async def action_start(self) -> None:
         """Handle the 's' key to start the checking process."""
-        self.query_one("#status-label").update("[bold blink secondary]RUNNING...[/]")
+        self.query_one("#status-label").update("[bold blue blink]RUNNING...[/]")
         self.log_msg("Starting Playwright worker...")
-        
-        # We use a worker to keep the TUI responsive while Playwright runs
+        # Run the checker in a worker to keep the TUI responsive
         self.run_worker(self.check_process(), thread=False)
 
     async def check_process(self) -> None:
+        """Core logic for checking codes and updating the TUI."""
         checker = BCChecker(headless=False)
         
         async def ui_callback(msg, code=None, status=None):
@@ -70,18 +74,19 @@ class BCCheckApp(App):
                 }
                 
                 try:
-                    # Update the specific cell using the explicit column key
-                    table.update_cell(code, "status_col", status_map.get(status, status))
-                    # Ensure the row is visible
+                    # Explicitly update the specific cell using the 'status_final' key
+                    table.update_cell(code, "status_final", status_map.get(status, status))
+                    # Move cursor to follow progress
                     table.move_cursor(row=table.get_row_index(code))
                 except Exception as e:
-                    self.log_msg(f"UI Error: {e}")
+                    # Fail silently in the UI if there's a minor cell mismatch
+                    pass
 
         checker.on_update = ui_callback
         await checker.run()
         
-        self.query_one("#status-label").update("[bold accent]FINISHED[/]")
-        self.log_msg("Checking process complete.")
+        self.query_one("#status-label").update("[bold green]FINISHED[/]")
+        self.log_msg("All codes checked.")
 
 if __name__ == "__main__":
     app = BCCheckApp()

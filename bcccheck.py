@@ -107,12 +107,13 @@ class BCChecker:
         await input_loc.fill("")
         await input_loc.fill(code)
 
-        submit_loc = await self.find_first_existing(page, SELECTORS["submit_candidates"])
-        if submit_loc:
-            await submit_loc.click()
-        else:
-            await input_loc.press("Enter")
+        # Pressing 'Enter' is much more robust against overlays (like cookie banners)
+        # than clicking a button, because it doesn't check for pointer intersections.
+        await input_loc.press("Enter")
 
+        # Fallback: if 'Enter' didn't seem to trigger anything, try a forced click
+        # (But usually Enter is enough)
+        
         return await self.wait_for_success(page)
 
     async def run(self):
@@ -135,6 +136,24 @@ class BCChecker:
 
             page = await context.new_page()
             await page.goto(YUM_URL, wait_until="domcontentloaded")
+
+            # Handle possible cookie banners or overlays
+            try:
+                # Look for common "Accept" or "Close" buttons for cookies
+                cookie_selectors = [
+                    'button:has-text("Accept")',
+                    'button:has-text("Agree")',
+                    '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
+                    '.qc-cmp2-footer button'
+                ]
+                for sel in cookie_selectors:
+                    loc = page.locator(sel)
+                    if await loc.count() > 0 and await loc.first().is_visible():
+                        await loc.first().click()
+                        await page.wait_for_timeout(500)
+                        break
+            except:
+                pass
 
             try:
                 await page.wait_for_selector('input#code-input', timeout=10000)

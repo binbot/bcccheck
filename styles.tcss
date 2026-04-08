@@ -12,18 +12,16 @@ $text: #cdd6f4;
 Screen {
     background: $background;
     color: $text;
+    scrollbar-size: 0 0; /* Hides all scrollbars */
 }
 
-Header {
-    background: $primary;
-    color: $background;
+#app-title {
+    background: $background;
+    color: $primary;
+    text-align: center;
     text-style: bold;
     height: 1;
-}
-
-Footer {
-    background: $surface;
-    color: $secondary;
+    margin-bottom: 0;
 }
 
 #main-container {
@@ -39,20 +37,7 @@ Footer {
     border: round $secondary;
     padding: 1;
     height: 100%;
-    transition: border 200ms, offset 200ms;
-}
-
-.pane:focus {
-    border: double $primary;
-    offset-y: -1;
-}
-
-#code-list-pane {
-    /* Left sidebar */
-}
-
-#status-pane {
-    /* Main area */
+    scrollbar-size: 0 0; /* Ensures panes don't show scrollbars */
 }
 
 DataTable {
@@ -60,16 +45,17 @@ DataTable {
     color: $text;
     height: 100%;
     border: none;
+    scrollbar-size: 0 0;
 }
 
 DataTable > .datatable--header {
-    background: $secondary;
-    color: $background;
+    background: $surface;
+    color: $secondary;
     text-style: bold;
 }
 
 DataTable > .datatable--cursor {
-    background: $primary 30%;
+    background: $primary 20%;
 }
 
 Log {
@@ -77,13 +63,13 @@ Log {
     color: $text;
     border: none;
     height: 1fr;
+    scrollbar-size: 0 0;
 }
 
 #progress-area {
-    height: 3;
+    height: 1;
     content-align: center middle;
-    border-bottom: dashed $secondary;
-    margin-bottom: 1;
+    margin-top: 1;
 }
 
 .status-checking { color: $secondary; }
