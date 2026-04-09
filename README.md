@@ -1,5 +1,7 @@
 # bcccheck
 
+![bcccheck TUI Screenshot](screenshot.png)
+
 A small, practical, open-source helper that automates checking Bandcamp YUM codes like a careful, efficient human.
 
 bcccheck opens bandcamp.com/yum in a real browser session, enters codes from a list one at a time, and stops at the first redeemable code it finds. It features a modern, "New Retro" TUI (Terminal User Interface) for a beautiful and snappy experience.
