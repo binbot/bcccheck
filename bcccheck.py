@@ -10,6 +10,9 @@ YUM_URL = "https://bandcamp.com/yum"
 CODES_FILE = Path("codes.txt")
 COOKIES_FILE = Path("cookies.json")
 
+INTER_CODE_DELAY_MS = 100
+COOKIE_DISMISS_WAIT_MS = 250
+
 SELECTORS = {
     "input_candidates": [
         'input#code-input',
@@ -104,16 +107,12 @@ class BCChecker:
         input_loc = await self.find_first_existing(page, SELECTORS["input_candidates"])
         if not input_loc:
             return False
-        await input_loc.fill("")
         await input_loc.fill(code)
 
         # Pressing 'Enter' is much more robust against overlays (like cookie banners)
         # than clicking a button, because it doesn't check for pointer intersections.
         await input_loc.press("Enter")
 
-        # Fallback: if 'Enter' didn't seem to trigger anything, try a forced click
-        # (But usually Enter is enough)
-        
         return await self.wait_for_success(page)
 
     async def run(self):
@@ -150,7 +149,7 @@ class BCChecker:
                     loc = page.locator(sel)
                     if await loc.count() > 0 and await loc.first().is_visible():
                         await loc.first().click()
-                        await page.wait_for_timeout(500)
+                        await page.wait_for_timeout(COOKIE_DISMISS_WAIT_MS)
                         break
             except:
                 pass
@@ -164,7 +163,7 @@ class BCChecker:
 
             for code in self.codes:
                 await self._emit(f"Checking {code}...", code=code, status="checking")
-                await page.wait_for_timeout(250)
+                await page.wait_for_timeout(INTER_CODE_DELAY_MS)
 
                 try:
                     if await self.check_code(page, code):
