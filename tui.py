@@ -106,7 +106,7 @@ class BCCheckApp(App):
         self.query_one("#status-label").update("[bold success]FINISHED[/]")
         self.log_msg("All codes checked.")
 
-THEME_ORDER = ["terminal", "catppuccin", "tokyo-night", "rose-pine"]
+THEME_ORDER = ["terminal", "dracula", "tokyo-night", "rose-pine"]
 
 THEMES = [
     Theme(
@@ -124,18 +124,18 @@ THEMES = [
         foreground="#cdd6f4",
     ),
     Theme(
-        name="catppuccin",
+        name="dracula",
         dark=True,
-        background="#1e1e2e",
-        surface="#313244",
-        panel="#181825",
-        primary="#cba6f7",
-        secondary="#89b4fa",
-        accent="#a6e3a1",
-        success="#a6e3a1",
-        warning="#f9e2af",
-        error="#f38ba8",
-        foreground="#cdd6f4",
+        background="#282a36",
+        surface="#21222c",
+        panel="#21222c",
+        primary="#bd93f9",
+        secondary="#8be9fd",
+        accent="#50fa7b",
+        success="#50fa7b",
+        warning="#f1fa8c",
+        error="#ff5555",
+        foreground="#f8f8f2",
     ),
     Theme(
         name="tokyo-night",
@@ -170,7 +170,7 @@ THEMES = [
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="bcccheck TUI")
-    parser.add_argument("--theme", help="Theme name: terminal, catppuccin, tokyo-night, rose-pine")
+    parser.add_argument("--theme", help="Theme name: terminal, dracula, tokyo-night, rose-pine")
     args = parser.parse_args()
     app = BCCheckApp()
     if args.theme:
