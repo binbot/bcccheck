@@ -19,7 +19,7 @@ class BCCheckApp(App):
         ("s", "start", "Start Checking"),
         ("t", "cycle_theme", "Cycle Theme"),
     ]
-    DEFAULT_THEME = "terminal"
+    DEFAULT_THEME = "ansi-dark"
 
     def compose(self) -> ComposeResult:
         # Title bar without the pink background
@@ -40,7 +40,7 @@ class BCCheckApp(App):
         for _theme in THEMES:
             self.register_theme(_theme)
         start = getattr(self, "start_theme", None)
-        self.theme = start if start in THEME_ORDER else "terminal"
+        self.theme = start if start in THEME_ORDER else "ansi-dark"
 
         table = self.query_one(DataTable)
         # Use explicit keys to avoid any look-up errors
@@ -106,23 +106,9 @@ class BCCheckApp(App):
         self.query_one("#status-label").update("[bold success]FINISHED[/]")
         self.log_msg("All codes checked.")
 
-THEME_ORDER = ["terminal", "dracula", "tokyo-night", "rose-pine"]
+THEME_ORDER = ["ansi-dark", "dracula", "tokyo-night", "rose-pine"]
 
 THEMES = [
-    Theme(
-        name="terminal",
-        dark=True,
-        background="transparent",
-        surface="transparent",
-        panel="transparent",
-        primary="#cba6f7",
-        secondary="#89b4fa",
-        accent="#a6e3a1",
-        success="#a6e3a1",
-        warning="#f9e2af",
-        error="#f38ba8",
-        foreground="#cdd6f4",
-    ),
     Theme(
         name="dracula",
         dark=True,
@@ -170,7 +156,7 @@ THEMES = [
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="bcccheck TUI")
-    parser.add_argument("--theme", help="Theme name: terminal, dracula, tokyo-night, rose-pine")
+    parser.add_argument("--theme", help="Theme name: ansi-dark, dracula, tokyo-night, rose-pine")
     args = parser.parse_args()
     app = BCCheckApp()
     if args.theme:
