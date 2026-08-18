@@ -1,18 +1,8 @@
-/* styles.tcss */
-
-/* Catppuccin Mocha Palette */
-$background: #1e1e2e;
-$surface: #313244;
-$primary: #cba6f7;   /* Mauve */
-$secondary: #89b4fa; /* Blue */
-$accent: #a6e3a1;    /* Green */
-$error: #f38ba8;     /* Red */
-$text: #cdd6f4;
+/* styles.tcss - structural only; colors come from the active Textual theme */
 
 Screen {
     background: $background;
     color: $text;
-    scrollbar-size: 0 0; /* Hides all scrollbars */
 }
 
 #app-title {
@@ -37,7 +27,6 @@ Screen {
     border: round $secondary;
     padding: 1;
     height: 100%;
-    scrollbar-size: 0 0; /* Ensures panes don't show scrollbars */
 }
 
 DataTable {
@@ -45,7 +34,6 @@ DataTable {
     color: $text;
     height: 100%;
     border: none;
-    scrollbar-size: 0 0;
 }
 
 DataTable > .datatable--header {
@@ -63,7 +51,6 @@ Log {
     color: $text;
     border: none;
     height: 1fr;
-    scrollbar-size: 0 0;
 }
 
 #progress-area {
@@ -71,8 +58,3 @@ Log {
     content-align: center middle;
     margin-top: 1;
 }
-
-.status-checking { color: $secondary; }
-.status-success { color: $accent; text-style: bold; }
-.status-failed { color: $text 50%; }
-.status-error { color: $error; }
