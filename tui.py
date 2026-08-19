@@ -2,16 +2,23 @@
 
 import asyncio
 from pathlib import Path
-from textual.app import App, ComposeResult
-from textual.containers import Container, Vertical
-from textual.widgets import DataTable, Static, Log, Label
-from textual.theme import Theme
-from bcccheck import BCChecker
+
+try:
+    from textual.app import App, ComposeResult
+    from textual.containers import Container, Vertical
+    from textual.widgets import DataTable, Static, Log, Label
+    from textual.theme import Theme
+    from bcccheck import BCChecker
+except ImportError:
+    print("Missing dependencies.")
+    print("Run with: uv run tui.py")
+    print("(or install manually: pip install -r requirements.txt && playwright install chromium)")
+    raise SystemExit(1)
 
 class BCCheckApp(App):
     """
     A minimalist, integrated Bandcamp YUM code checker TUI.
-    Aesthetic: Catppuccin Mocha / "Blip_Blip" style.
+    Aesthetic: follows your terminal theme by default; selectable color themes included.
     """
     CSS_PATH = "styles.tcss"
     BINDINGS = [
@@ -33,7 +40,7 @@ class BCCheckApp(App):
                 yield Log()
                 # Status area at the bottom
                 with Static(id="progress-area"):
-                    yield Label("Press [bold blue]S[/] to start • [bold blue]Q[/] to quit", id="status-label")
+                    yield Label("Press [bold secondary]S[/] to start • [bold secondary]Q[/] to quit", id="status-label")
 
     def on_mount(self) -> None:
         """Initialize themes and the data table with codes from file."""
@@ -77,7 +84,7 @@ class BCCheckApp(App):
 
     async def check_process(self) -> None:
         """Core logic for checking codes and updating the TUI."""
-        checker = BCChecker(headless=False)
+        checker = BCChecker(headless=not getattr(self, "show_browser", False))
         
         async def ui_callback(msg, code=None, status=None):
             self.log_msg(msg)
@@ -157,8 +164,11 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="bcccheck TUI")
     parser.add_argument("--theme", help="Theme name: ansi-dark, dracula, tokyo-night, rose-pine")
+    parser.add_argument("--show-browser", action="store_true",
+                        help="Show the browser window (default is headless/TUI-only)")
     args = parser.parse_args()
     app = BCCheckApp()
     if args.theme:
         app.start_theme = args.theme
+    app.show_browser = args.show_browser
     app.run()
