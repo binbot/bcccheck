@@ -10,6 +10,9 @@ YUM_URL = "https://bandcamp.com/yum"
 CODES_FILE = Path("codes.txt")
 COOKIES_FILE = Path("cookies.json")
 
+INTER_CODE_DELAY_MS = 100
+COOKIE_DISMISS_WAIT_MS = 250
+
 SELECTORS = {
     "input_candidates": [
         'input#code-input',
@@ -72,7 +75,7 @@ class BCChecker:
         for sel in possible_error_selectors:
             try:
                 loc = page.locator(sel)
-                if await loc.count() > 0 and await loc.first().is_visible():
+                if await loc.count() > 0 and await loc.first.is_visible():
                     return True
             except:
                 pass
@@ -100,20 +103,52 @@ class BCChecker:
         await page.wait_for_timeout(500)
         return False
 
+    async def dismiss_cookie_banner(self, page) -> bool:
+        """Dismiss a cookie-consent popover if present.
+
+        Prefers rejecting/denying consent (privacy-friendly) and falls back
+        to accepting. Clicks programmatically, so it works headless too.
+        Returns True if a button was clicked.
+        """
+        deny_selectors = [
+            'button:has-text("Reject")',
+            'button:has-text("Deny")',
+            'button:has-text("Decline")',
+            'button:has-text("Necessary only")',
+            '#CybotCookiebotDialogBodyButtonDecline',
+            '#CybotCookiebotDialogBodyLevelButtonLevelOptinDecline',
+            '.qc-cmp2-footer button:has-text("Reject")',
+        ]
+        accept_selectors = [
+            'button:has-text("Accept")',
+            'button:has-text("Agree")',
+            'button:has-text("Allow")',
+            '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
+            '.qc-cmp2-footer button',
+        ]
+        for sel in deny_selectors + accept_selectors:
+            try:
+                loc = page.locator(sel)
+                if await loc.count() > 0 and await loc.first.is_visible():
+                    await loc.first.click()
+                    await page.wait_for_timeout(COOKIE_DISMISS_WAIT_MS)
+                    await self._emit(f"Dismissed cookie banner ({sel}).")
+                    return True
+            except Exception as e:
+                await self._emit(f"Cookie dismiss selector failed ({sel}): {e}")
+        return False
+
     async def check_code(self, page, code: str) -> bool:
         input_loc = await self.find_first_existing(page, SELECTORS["input_candidates"])
         if not input_loc:
             return False
-        await input_loc.fill("")
+        await self.dismiss_cookie_banner(page)
         await input_loc.fill(code)
 
         # Pressing 'Enter' is much more robust against overlays (like cookie banners)
         # than clicking a button, because it doesn't check for pointer intersections.
         await input_loc.press("Enter")
 
-        # Fallback: if 'Enter' didn't seem to trigger anything, try a forced click
-        # (But usually Enter is enough)
-        
         return await self.wait_for_success(page)
 
     async def run(self):
@@ -138,22 +173,7 @@ class BCChecker:
             await page.goto(YUM_URL, wait_until="domcontentloaded")
 
             # Handle possible cookie banners or overlays
-            try:
-                # Look for common "Accept" or "Close" buttons for cookies
-                cookie_selectors = [
-                    'button:has-text("Accept")',
-                    'button:has-text("Agree")',
-                    '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
-                    '.qc-cmp2-footer button'
-                ]
-                for sel in cookie_selectors:
-                    loc = page.locator(sel)
-                    if await loc.count() > 0 and await loc.first().is_visible():
-                        await loc.first().click()
-                        await page.wait_for_timeout(500)
-                        break
-            except:
-                pass
+            await self.dismiss_cookie_banner(page)
 
             try:
                 await page.wait_for_selector('input#code-input', timeout=10000)
@@ -164,7 +184,7 @@ class BCChecker:
 
             for code in self.codes:
                 await self._emit(f"Checking {code}...", code=code, status="checking")
-                await page.wait_for_timeout(250)
+                await page.wait_for_timeout(INTER_CODE_DELAY_MS)
 
                 try:
                     if await self.check_code(page, code):
@@ -180,8 +200,10 @@ class BCChecker:
                 if page.url != YUM_URL:
                     try:
                         await page.goto(YUM_URL, wait_until="domcontentloaded")
+                        await self.dismiss_cookie_banner(page)
                         await page.wait_for_selector('input#code-input', timeout=5000)
-                    except:
+                    except Exception as e:
+                        await self._emit(f"Error returning to YUM page: {e}")
                         break
 
             await browser.close()

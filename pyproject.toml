@@ -1,0 +1,12 @@
+[project]
+name = "bcccheck"
+version = "0.1.0"
+description = "Bandcamp YUM code checker with a Textual TUI"
+requires-python = ">=3.9"
+dependencies = [
+    "textual",
+    "playwright",
+]
+
+[tool.uv]
+package = false
