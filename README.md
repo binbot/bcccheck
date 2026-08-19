@@ -12,7 +12,7 @@ bcccheck opens bandcamp.com/yum in a real browser session, enters codes from a l
 
 ## Features
 
-- **Integrated TUI**: A beautiful terminal interface with a "Catppuccin Mocha" palette.
+- **Integrated TUI**: A terminal interface that follows your terminal's own colors by default, with selectable themes (dracula, tokyo-night, rose-pine).
 - **Automated Redemption**: Enters codes in a real browser session via Playwright.
 - **Intelligent Detection**: Uses robust signals (navigation redirects or page metadata) to confirm success.
 - **Human-like Pacing**: Small delays to mimic natural interaction and avoid rate limits.
@@ -22,37 +22,35 @@ bcccheck opens bandcamp.com/yum in a real browser session, enters codes from a l
 
 ## Requirements
 
-- Python 3.9+
-- Playwright (Python bindings)
-- Textual (for the TUI)
+- [uv](https://docs.astral.sh/uv/) (handles Python + dependencies automatically)
 - A codes list file: `codes.txt` (one code per line)
-- Your Bandcamp cookies: `cookies.json` (optional, for authenticated sessions)
+- Your Bandcamp cookies: `cookies.json` (optional — only to save redeemed releases to your library)
+
+> The app runs **headless by default** (the TUI is the only thing you see; no browser window). Use `--show-browser` to show the browser for debugging.
 
 ---
 
-## Installation (Development)
+## Installation
 
-1. Clone the repo
-    ```sh
-    git clone https://codeberg.org/your-user/bcccheck.git
-    cd bcccheck
-    ```
+The easiest way is with [uv](https://docs.astral.sh/uv/), which creates a managed
+virtual environment and installs dependencies automatically — no manual `venv` or `pip` needed:
 
-2. Create and activate a virtual environment
-    ```sh
-    python -m venv .venv
-    source .venv/bin/activate
-    ```
+```sh
+uv run tui.py
+```
 
-3. Install dependencies
-    ```sh
-    pip install -r requirements.txt
-    ```
+That's it. The first run downloads the dependencies and the Chromium browser, then launches the TUI.
 
-4. Install Playwright browser
-    ```sh
-    playwright install chromium
-    ```
+### Manual install (alternative)
+If you prefer not to use uv:
+
+```sh
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+playwright install chromium
+python tui.py
+```
 
 ---
 
@@ -62,16 +60,21 @@ bcccheck opens bandcamp.com/yum in a real browser session, enters codes from a l
 This launches the modern terminal interface:
 
 ```sh
-python tui.py
+uv run tui.py
+# or, if you made the launcher executable:
+./run.sh
 ```
 - Press **'s'** to start checking codes.
 - Press **'q'** to quit.
+- Press **'t'** to cycle color themes (default follows your terminal; also dracula, tokyo-night, rose-pine).
+- Pass `--theme dracula` to start in a specific theme.
+- Pass `--show-browser` to show the browser window (default is headless/TUI-only).
 
 ### Run the CLI
 For a classic, text-only experience:
 
 ```sh
-python bcccheck.py
+uv run bcccheck.py --show-browser
 ```
 
 ---
@@ -102,7 +105,8 @@ To redeem codes directly to your Bandcamp collection, export your cookies to `co
 
 - `tui.py` — The TUI application entry point.
 - `bcccheck.py` — The core logic and CLI entry point.
-- `styles.tcss` — Stylesheet for the TUI (Catppuccin Mocha theme).
+- `styles.tcss` — Structural stylesheet for the TUI (colors come from the active theme).
+- `run.sh` / `run.command` — Launchers that run the TUI via `uv` (no manual setup).
 - `codes.txt` — Your list of codes (ignored by git).
 - `cookies.json` — Your Bandcamp session cookies (ignored by git).
 

@@ -33,7 +33,7 @@ SELECTORS = {
 }
 
 class BCChecker:
-    def __init__(self, codes_file=CODES_FILE, cookies_file=COOKIES_FILE, headless=False):
+    def __init__(self, codes_file=CODES_FILE, cookies_file=COOKIES_FILE, headless=True):
         self.codes_file = codes_file
         self.cookies_file = cookies_file
         self.headless = headless
@@ -161,7 +161,7 @@ class BCChecker:
             if hasattr(sys, '_MEIPASS'):
                 pw.browsers_path = Path(sys._MEIPASS) / 'ms-playwright'
             
-            # headless=False is needed for the bundled version as per original script
+            # Headless by default (TUI-only); --show-browser forces a visible browser for debugging.
             browser = await pw.chromium.launch(headless=self.headless)
             context = await browser.new_context()
 
@@ -213,8 +213,13 @@ class BCChecker:
                 await self._emit("Finished. No redeemable codes found.")
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="bcccheck CLI")
+    parser.add_argument("--show-browser", action="store_true",
+                        help="Show the browser window (default is headless/TUI-only)")
+    args = parser.parse_args()
     # If run directly, behave like the original script
-    checker = BCChecker(headless=False)
+    checker = BCChecker(headless=not args.show_browser)
     async def cli_update(msg, code=None, status=None):
         print(msg)
     checker.on_update = cli_update
