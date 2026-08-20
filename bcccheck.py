@@ -1,6 +1,7 @@
 # bcccheck.py
 
 import asyncio
+import os
 import sys
 import json
 from pathlib import Path
@@ -31,6 +32,59 @@ SELECTORS = {
     ],
     "pagedata": '#pagedata',
 }
+
+
+def _playwright_cache_dir() -> Path:
+    """Location Playwright uses for downloaded browsers."""
+    env = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
+    if env and env != "0":
+        return Path(env)
+    return Path.home() / ".cache" / "ms-playwright"
+
+
+def _browser_installed(prefix: str) -> bool:
+    base = _playwright_cache_dir()
+    if not base.is_dir():
+        return False
+    return any(p.name.startswith(prefix) for p in base.iterdir())
+
+
+async def ensure_browser(on_status=None, needs_full=False):
+    """Download the browser on first run so end users need zero setup.
+
+    By default only chromium-headless-shell is fetched (~260 MB). When the
+    visible browser is requested (--show-browser) the full chromium is also
+    fetched. Browsers land in Playwright's default cache and are reused on
+    every later run.
+    """
+    targets = ["chromium_headless_shell-"]
+    if needs_full:
+        targets.append("chromium-")
+    if all(_browser_installed(t) for t in targets):
+        return
+    if on_status:
+        await on_status("Downloading browser (one-time, ~260 MB)…")
+    try:
+        import runpy
+        cmd = ["playwright", "install", "chromium-headless-shell"]
+        if needs_full:
+            cmd.append("chromium")
+        saved_argv = sys.argv
+        sys.argv = cmd
+        try:
+            # Run in a thread so the TUI stays responsive during the one-time download.
+            await asyncio.to_thread(runpy.run_module, "playwright", "__main__")
+        except SystemExit as e:
+            if e.code not in (0, None):
+                raise RuntimeError(f"playwright install exited with code {e.code}")
+        finally:
+            sys.argv = saved_argv
+        if on_status:
+            await on_status("Browser ready.")
+    except Exception as e:
+        if on_status:
+            await on_status(f"Browser download error: {e}")
+
 
 class BCChecker:
     def __init__(self, codes_file=CODES_FILE, cookies_file=COOKIES_FILE, headless=True):
@@ -157,9 +211,13 @@ class BCChecker:
             await self._emit("No codes found in codes.txt.")
             return
 
+        await ensure_browser(self._emit, needs_full=not self.headless)
+
         async with async_playwright() as pw:
             if hasattr(sys, '_MEIPASS'):
-                pw.browsers_path = Path(sys._MEIPASS) / 'ms-playwright'
+                bundled = Path(sys._MEIPASS) / 'ms-playwright'
+                if bundled.exists():
+                    pw.browsers_path = bundled
             
             # Headless by default (TUI-only); --show-browser forces a visible browser for debugging.
             browser = await pw.chromium.launch(headless=self.headless)
