@@ -1,0 +1,39 @@
+name: Build binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset: bcccheck-linux
+          - os: macos-latest
+            asset: bcccheck-macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Build standalone binary
+        run: uv run --with pyinstaller pyinstaller bcccheck.spec --noconfirm
+
+      - name: Rename artifact
+        run: mv dist/bcccheck "dist/${{ matrix.asset }}"
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "dist/${{ matrix.asset }}"

@@ -22,7 +22,7 @@ bcccheck opens bandcamp.com/yum in a real browser session, enters codes from a l
 
 ## Requirements
 
-- [uv](https://docs.astral.sh/uv/) (handles Python + dependencies automatically)
+- [uv](https://docs.astral.sh/uv/) — only needed when running from source; the prebuilt binary requires none of this
 - A codes list file: `codes.txt` (one code per line)
 - Your Bandcamp cookies: `cookies.json` (optional — only to save redeemed releases to your library)
 
@@ -52,6 +52,37 @@ python tui.py
 ```
 
 The Chromium browser is downloaded automatically the first time you run the app (about 260 MB, one time only). To pre-download it yourself, run `playwright install chromium`.
+
+---
+
+## Download (prebuilt binary)
+
+For most users, grab a prebuilt binary — **no Python or `uv` required**:
+
+- **Linux**: `bcccheck-linux`
+- **macOS**: `bcccheck-macos` (universal, arm64 + x86_64)
+
+Download the latest from the [GitHub Releases](https://github.com/binbot/bcccheck/releases) page, then from the folder containing your `codes.txt`:
+
+```sh
+chmod +x bcccheck-linux          # Linux
+# on macOS, if Gatekeeper complains, remove the quarantine flag first:
+# xattr -d com.apple.quarantine bcccheck-macos
+
+./bcccheck-linux                 # or: ./bcccheck-macos
+```
+
+On first run it automatically downloads the Chromium browser (~260 MB, one time) into its cache, then runs headless. The same flags apply: `--theme dracula`, `--show-browser`.
+
+### Build from source (contributors)
+
+If you have a Python toolchain ([uv](https://docs.astral.sh/uv/) + Python 3.9+), you can build the binary yourself from a checkout:
+
+```sh
+uv run --with pyinstaller pyinstaller bcccheck.spec
+```
+
+The result lands at `dist/bcccheck`. This path needs the same `uv`/Python setup as the dev workflow, so casual users should prefer the prebuilt download above.
 
 ---
 
