@@ -70,7 +70,14 @@ class BCCheckApp(App):
         self.query_one("#status-label").update("[bold secondary]RUNNING...[/]")
         self.log_msg("Starting Playwright worker...")
         # Run the checker in a worker to keep the TUI responsive
-        self.run_worker(self.check_process(), thread=False)
+        self._worker = self.run_worker(self.check_process(), thread=False)
+
+    def action_quit(self) -> None:
+        """Cancel any running check, then exit cleanly."""
+        worker = getattr(self, "_worker", None)
+        if worker is not None and not worker.is_finished:
+            worker.cancel()
+        self.exit()
 
     def action_cycle_theme(self) -> None:
         """Cycle through the available themes with the 't' key."""
@@ -108,8 +115,12 @@ class BCCheckApp(App):
                     pass
 
         checker.on_update = ui_callback
-        await checker.run()
-        
+        try:
+            await checker.run()
+        except asyncio.CancelledError:
+            self.log_msg("Check cancelled.")
+            return
+
         self.query_one("#status-label").update("[bold success]FINISHED[/]")
         self.log_msg("All codes checked.")
 
@@ -171,4 +182,7 @@ if __name__ == "__main__":
     if args.theme:
         app.start_theme = args.theme
     app.show_browser = args.show_browser
-    app.run()
+    try:
+        app.run()
+    except KeyboardInterrupt:
+        pass
