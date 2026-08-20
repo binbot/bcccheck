@@ -42,6 +42,13 @@ def _playwright_cache_dir() -> Path:
     return Path.home() / ".cache" / "ms-playwright"
 
 
+# Pin the browser cache to a persistent location so the one-time auto-download
+# (ensure_browser) and Playwright's launcher always agree on where the browser
+# lives. This also stops frozen builds from resolving to a package-relative temp
+# path (playwright/driver/package/.local-browsers) at runtime.
+os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", str(_playwright_cache_dir()))
+
+
 def _browser_installed(prefix: str) -> bool:
     base = _playwright_cache_dir()
     if not base.is_dir():
@@ -66,6 +73,7 @@ async def ensure_browser(on_status=None, needs_full=False):
         await on_status("Downloading browser (one-time, ~260 MB)…")
     try:
         import runpy
+        os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(_playwright_cache_dir())
         cmd = ["playwright", "install", "chromium-headless-shell"]
         if needs_full:
             cmd.append("chromium")
@@ -214,12 +222,9 @@ class BCChecker:
         await ensure_browser(self._emit, needs_full=not self.headless)
 
         async with async_playwright() as pw:
-            if hasattr(sys, '_MEIPASS'):
-                bundled = Path(sys._MEIPASS) / 'ms-playwright'
-                if bundled.exists():
-                    pw.browsers_path = bundled
-            
-            # Headless by default (TUI-only); --show-browser forces a visible browser for debugging.
+            # The browser is auto-downloaded to the persistent cache (pinned via
+            # PLAYWRIGHT_BROWSERS_PATH at import) and is NOT bundled into the
+            # binary, so we rely on that default rather than a frozen path.
             browser = await pw.chromium.launch(headless=self.headless)
             context = await browser.new_context()
 
