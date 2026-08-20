@@ -68,6 +68,8 @@ async def ensure_browser(on_status=None, needs_full=False):
     if needs_full:
         targets.append("chromium-")
     if all(_browser_installed(t) for t in targets):
+        if on_status:
+            await on_status(f"Browser already cached at {_playwright_cache_dir()}")
         return
     if on_status:
         await on_status("Downloading browser (one-time, ~260 MB)…")
@@ -88,7 +90,7 @@ async def ensure_browser(on_status=None, needs_full=False):
         finally:
             sys.argv = saved_argv
         if on_status:
-            await on_status("Browser ready.")
+            await on_status(f"Browser ready at {_playwright_cache_dir()}")
     except Exception as e:
         if on_status:
             await on_status(f"Browser download error: {e}")
@@ -214,6 +216,8 @@ class BCChecker:
         return await self.wait_for_success(page)
 
     async def run(self):
+        await self._emit(f"Looking for codes in: {self.codes_file.resolve()}")
+        await self._emit(f"Browser cache: {_playwright_cache_dir()}")
         self.load_codes()
         if not self.codes:
             await self._emit("No codes found in codes.txt.")

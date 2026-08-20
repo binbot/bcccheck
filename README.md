@@ -62,9 +62,10 @@ For most users, grab a prebuilt binary — **no Python or `uv` required**:
 - **Linux**: `bcccheck-linux`
 - **macOS**: `bcccheck-macos` (universal, arm64 + x86_64)
 
-Download the latest from the [GitHub Releases](https://github.com/binbot/bcccheck/releases) page, then from the folder containing your `codes.txt`:
+Download the latest from the [GitHub Releases](https://github.com/binbot/bcccheck/releases) page. The binary reads `codes.txt` from the **current working directory** — the folder you run it from — so place `codes.txt` next to it (or `cd` into that folder first), then:
 
 ```sh
+ls codes.txt                    # confirm it's here
 chmod +x bcccheck-linux          # Linux
 # on macOS, if Gatekeeper complains, remove the quarantine flag first:
 # xattr -d com.apple.quarantine bcccheck-macos
@@ -72,7 +73,7 @@ chmod +x bcccheck-linux          # Linux
 ./bcccheck-linux                 # or: ./bcccheck-macos
 ```
 
-On first run it automatically downloads the Chromium browser (~260 MB, one time) into its cache, then runs headless. The same flags apply: `--theme dracula`, `--show-browser`.
+The app runs **headless** (no browser window appears). On first run it downloads the Chromium browser (~260 MB, one time) into its cache and reuses it on every later run; if the browser is already cached (e.g. from a previous `uv run tui.py`), the download is **skipped** — that's expected, not a problem. The same flags apply: `--theme dracula`, `--show-browser`.
 
 ### Build from source (contributors)
 
@@ -113,7 +114,7 @@ uv run bcccheck.py --show-browser
 
 ## Preparing `codes.txt`
 
-Create a `codes.txt` file in the project root with one Bandcamp YUM code per line. Example:
+Create a `codes.txt` file **in the directory you run the binary / `uv run tui.py` from** (the current working directory) with one Bandcamp YUM code per line. Example:
 
 ```
 abcd-1234
