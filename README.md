@@ -48,9 +48,10 @@ If you prefer not to use uv:
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-playwright install chromium
 python tui.py
 ```
+
+The Chromium browser is downloaded automatically the first time you run the app (about 260 MB, one time only). To pre-download it yourself, run `playwright install chromium`.
 
 ---
 
