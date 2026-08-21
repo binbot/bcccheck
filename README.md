@@ -62,7 +62,7 @@ For most users, grab a prebuilt binary — **no Python or `uv` required**:
 - **Linux**: `bcccheck-linux`
 - **macOS**: `bcccheck-macos` (universal, arm64 + x86_64)
 
-Download the latest from the [GitHub Releases](https://github.com/binbot/bcccheck/releases) page. The binary reads `codes.txt` from the **current working directory** — the folder you run it from — so place `codes.txt` next to it (or `cd` into that folder first), then:
+Download the latest from the [GitHub Releases](https://github.com/binbot/bcccheck/releases) page, then place your `codes.txt` **next to the binary** (recommended — this also makes **double-clicking** the app work, since a double-click runs it from your home folder). You can also run it from a terminal in any folder that contains `codes.txt`. Then:
 
 ```sh
 ls codes.txt                    # confirm it's here
@@ -73,7 +73,9 @@ chmod +x bcccheck-linux          # Linux
 ./bcccheck-linux                 # or: ./bcccheck-macos
 ```
 
-The app runs **headless** (no browser window appears). On first run it downloads the Chromium browser (~260 MB, one time) into its cache and reuses it on every later run; if the browser is already cached (e.g. from a previous `uv run tui.py`), the download is **skipped** — that's expected, not a problem. The same flags apply: `--theme dracula`, `--show-browser`.
+The app runs **headless** (no browser window appears). On every run it ensures the Chromium browser is available, downloading it (~260 MB) into Playwright's cache only when missing or outdated, then reuses it. If a browser was already installed from a different Playwright version, it is updated automatically — no manual `playwright install` needed. The same flags apply: `--theme dracula`, `--show-browser`.
+
+All activity is also written to `bcccheck.log` in the same folder, so you can inspect what the app did.
 
 ### Build from source (contributors)
 

@@ -1,6 +1,7 @@
 # bcccheck.py
 
 import asyncio
+import datetime
 import os
 import sys
 import json
@@ -49,13 +50,6 @@ def _playwright_cache_dir() -> Path:
 os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", str(_playwright_cache_dir()))
 
 
-def _browser_installed(prefix: str) -> bool:
-    base = _playwright_cache_dir()
-    if not base.is_dir():
-        return False
-    return any(p.name.startswith(prefix) for p in base.iterdir())
-
-
 async def ensure_browser(on_status=None, needs_full=False):
     """Download the browser on first run so end users need zero setup.
 
@@ -67,14 +61,14 @@ async def ensure_browser(on_status=None, needs_full=False):
     targets = ["chromium_headless_shell-"]
     if needs_full:
         targets.append("chromium-")
-    if all(_browser_installed(t) for t in targets):
-        if on_status:
-            await on_status(f"Browser already cached at {_playwright_cache_dir()}")
-        return
+    # Always run `playwright install`: it is idempotent (no re-download when the
+    # correct revision is already cached) and guarantees the exact revision the
+    # bundled Playwright expects is present, even if a stale revision exists in
+    # the cache (which previously caused "please run playwright install").
     if on_status:
-        await on_status("Downloading browser (one-time, ~260 MB)…")
+        await on_status("Ensuring Chromium browser is available (downloads once if needed)…")
     try:
-        import runpy
+        from playwright.__main__ import main as _pw_main
         os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(_playwright_cache_dir())
         cmd = ["playwright", "install", "chromium-headless-shell"]
         if needs_full:
@@ -83,7 +77,7 @@ async def ensure_browser(on_status=None, needs_full=False):
         sys.argv = cmd
         try:
             # Run in a thread so the TUI stays responsive during the one-time download.
-            await asyncio.to_thread(runpy.run_module, "playwright", "__main__")
+            await asyncio.to_thread(_pw_main)
         except SystemExit as e:
             if e.code not in (0, None):
                 raise RuntimeError(f"playwright install exited with code {e.code}")
@@ -113,7 +107,12 @@ class BCChecker:
         return self.codes
 
     async def _emit(self, msg, code=None, status=None):
-        """Send an update message to the UI callback"""
+        """Send an update message to the UI callback (and append to bcccheck.log)."""
+        try:
+            with Path("bcccheck.log").open("a") as _f:
+                _f.write(f"{datetime.datetime.now():%H:%M:%S} {msg}\n")
+        except Exception:
+            pass
         if self.on_update:
             await self.on_update(msg, code, status)
 
@@ -216,6 +215,13 @@ class BCChecker:
         return await self.wait_for_success(page)
 
     async def run(self):
+        # Resolve codes.txt: prefer the given path, else fall back to the
+        # binary's own folder (so double-clicking the app with codes.txt beside
+        # it works, since a double-click's CWD is the user's home).
+        candidates = [self.codes_file, Path(sys.argv[0]).resolve().parent / "codes.txt"]
+        resolved = next((c for c in candidates if c.exists()), None)
+        if resolved is not None:
+            self.codes_file = resolved
         await self._emit(f"Looking for codes in: {self.codes_file.resolve()}")
         await self._emit(f"Browser cache: {_playwright_cache_dir()}")
         self.load_codes()
@@ -229,7 +235,16 @@ class BCChecker:
             # The browser is auto-downloaded to the persistent cache (pinned via
             # PLAYWRIGHT_BROWSERS_PATH at import) and is NOT bundled into the
             # binary, so we rely on that default rather than a frozen path.
-            browser = await pw.chromium.launch(headless=self.headless)
+            try:
+                browser = await pw.chromium.launch(headless=self.headless)
+            except Exception as e:
+                await self._emit(f"Browser failed to start ({e}); installing/updating it, then retrying…")
+                await ensure_browser(self._emit, needs_full=not self.headless)
+                try:
+                    browser = await pw.chromium.launch(headless=self.headless)
+                except Exception as e2:
+                    await self._emit(f"Browser still failed to start: {e2}. Check your network connection and re-run.")
+                    return
             context = await browser.new_context()
 
             if self.cookies_file.exists():
